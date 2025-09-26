@@ -8,7 +8,7 @@ const swaggerSpec = {
             'OAuth (Google) + session cookie protected API for managing categories, locations, items, and item notes.',
     },
     servers: [
-        { url: process.env.BASE_URL || 'http://localhost:3000', description: 'Local' },
+        { url: process.env.FRONTEND_ORIGIN || 'http://localhost:3000', description: 'Local' },
     ],
     tags: [
         { name: 'Auth', description: 'Login with Google & session status' },
