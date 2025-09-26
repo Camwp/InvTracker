@@ -112,16 +112,16 @@ app.use('/locations', locationRoutes);
 app.use('/items', itemRoutes);
 app.use('/', noteRoutes); // provides /items/:itemId/notes and /notes/:id
 app.get('/', (req, res) => {
-    res.redirect('/api-docs'); // or '/docs' if you prefer
+    res.redirect('/api-docs');
 });
 // Health & root
 app.get('/health', (_req, res) => res.json({ ok: true }));
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use(['/api-docs', '/docs'], swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Error handler
 app.use(errorHandler);
 
 // Start
 app.listen(PORT, () => {
-    console.log(`API listening on :${PORT}`);
+    console.log(`API listening on ${process.env.FRONTEND_ORIGIN}`);
 });
