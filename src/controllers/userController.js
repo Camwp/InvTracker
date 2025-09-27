@@ -1,9 +1,11 @@
 import User from '../models/User.js';
+import { createUserZ, updateUserZ } from '../validators/users.js';
 
 // CREATE
 export const createUser = async (req, res) => {
   try {
-    const user = new User(req.body);
+    const validatedData = createUserZ.parse(req.body); // Zod validation
+    const user = new User(validatedData);
     await user.save();
     res.status(201).json(user);
   } catch (err) {
@@ -35,9 +37,10 @@ export const getUserById = async (req, res) => {
 // UPDATE
 export const updateUser = async (req, res) => {
   try {
+    const validatedData = updateUserZ.parse(req.body); // Zod validation
     const user = await User.findOneAndUpdate(
       { _id: req.params.id, isDeleted: false },
-      req.body,
+      validatedData,
       { new: true }
     );
     if (!user) return res.status(404).json({ error: 'User not found or deleted' });
