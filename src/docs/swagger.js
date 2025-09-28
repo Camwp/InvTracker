@@ -1,27 +1,45 @@
 // src/docs/swagger.js
+const API_ORIGIN = process.env.FRONTEND_ORIGIN || 'http://localhost:3000'; // <-- use API, not FE
+
 const swaggerSpec = {
     openapi: '3.0.3',
     info: {
-        title: 'Inventory Lite API',
-        version: '1.0.0',
-        description:
-            'OAuth (Google) + session cookie protected API for managing categories, locations, items, and item notes.',
+        title: 'Inventory Lite API', version: '1.0.0',
+        description: 'OAuth (Google) + session cookie protected API...'
     },
-    servers: [
-        { url: process.env.FRONTEND_ORIGIN || 'http://localhost:3000', description: 'Local' },
-    ],
-    tags: [
-        { name: 'Auth', description: 'Login with Google & session status' },
-        { name: 'Categories' },
-        { name: 'Locations' },
-        { name: 'Items' },
-        { name: 'Notes' },
-    ],
+    servers: [{ url: API_ORIGIN, description: 'API' }],
+
+    // ONE components object only
     components: {
         securitySchemes: {
-            // Express-session default cookie name is `connect.sid`
             cookieAuth: { type: 'apiKey', in: 'cookie', name: 'connect.sid' },
         },
+
+        // reusable responses live here too
+        responses: {
+            Unauthorized: {
+                description: 'Unauthorized',
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
+            },
+            Forbidden: {
+                description: 'Forbidden',
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+            },
+            NotFound: {
+                description: 'Not Found',
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+            },
+            Conflict: {
+                description: 'Conflict',
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+            },
+            BadRequest: {
+                description: 'Bad Request',
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } }
+            },
+        },
+
+        // models (this makes the bottom “Schemas” section show up)
         schemas: {
             ErrorResponse: {
                 type: 'object',
@@ -29,8 +47,8 @@ const swaggerSpec = {
                     error: {
                         type: 'object',
                         properties: {
-                            code: { type: 'string' },
-                            message: { type: 'string' },
+                            code: { type: 'string', example: 'BAD_REQUEST' },
+                            message: { type: 'string', example: 'Validation failed' },
                             details: { nullable: true },
                         },
                         required: ['code', 'message'],
@@ -38,141 +56,143 @@ const swaggerSpec = {
                 },
                 required: ['error'],
             },
+
+            // align to your DB fields
             User: {
                 type: 'object',
                 properties: {
                     id: { type: 'string', example: '68d62e16f8780af3242aee7e' },
-                    email: { type: 'string', format: 'email' },
-                    name: { type: 'string' },
-                    avatarUrl: { type: 'string' },
-                    role: { type: 'string', enum: ['user', 'admin'] },
+                    email: { type: 'string', format: 'email', example: 'user@example.com' },
+                    firstName: { type: 'string', example: 'Ada' },
+                    lastName: { type: 'string', example: 'Lovelace' },
+                    avatarUrl: { type: 'string', example: 'https://example.com/a.jpg' },
+                    role: { type: 'string', enum: ['user', 'admin'], example: 'user' },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
                 },
+                required: ['email'],
             },
+
             Category: {
                 type: 'object',
                 properties: {
-                    _id: { type: 'string' },
-                    name: { type: 'string', maxLength: 60 },
-                    description: { type: 'string' },
+                    _id: { type: 'string', example: '6655b1...' },
+                    name: { type: 'string', maxLength: 60, example: 'Cables' },
+                    description: { type: 'string', example: 'Network and power cables' },
                     color: { type: 'string', example: '#3366FF' },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
                 },
                 required: ['name'],
             },
+
             Location: {
                 type: 'object',
                 properties: {
                     _id: { type: 'string' },
-                    name: { type: 'string', maxLength: 60 },
-                    code: { type: 'string', maxLength: 20 },
-                    address: { type: 'string' },
-                    notes: { type: 'string' },
+                    name: { type: 'string', example: 'Warehouse A' },
+                    code: { type: 'string', example: 'WH-A' },
+                    address: { type: 'string', example: '123 Depot Rd' },
+                    notes: { type: 'string', example: 'East bay door is jammed' },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
                 },
                 required: ['name', 'code'],
             },
+
             Item: {
                 type: 'object',
                 properties: {
                     _id: { type: 'string' },
-                    name: { type: 'string', maxLength: 120 },
-                    sku: { type: 'string', maxLength: 60 },
-                    categoryId: { type: 'string' },
-                    locationId: { type: 'string' },
-                    qtyOnHand: { type: 'integer', minimum: 0 },
+                    name: { type: 'string', example: 'Cat6 Patch Cable 3ft' },
+                    sku: { type: 'string', example: 'CAT6-3FT-BLK' },
+                    categoryId: { type: 'string', example: '6655b1...' },
+                    locationId: { type: 'string', example: '6655b2...' },
+                    qtyOnHand: { type: 'integer', minimum: 0, example: 42 },
                     unit: { type: 'string', example: 'ea' },
-                    unitCost: { type: 'number', minimum: 0 },
-                    reorderLevel: { type: 'integer', minimum: 0 },
-                    status: { type: 'string', enum: ['active', 'archived'] },
-                    barcode: { type: 'string' },
-                    tags: { type: 'array', items: { type: 'string' } },
+                    unitCost: { type: 'number', minimum: 0, example: 2.49 },
+                    reorderLevel: { type: 'integer', minimum: 0, example: 10 },
+                    status: { type: 'string', enum: ['active', 'archived'], example: 'active' },
+                    barcode: { type: 'string', example: '0123456789012' },
+                    tags: { type: 'array', items: { type: 'string' }, example: ['ethernet', 'black'] },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
                 },
-                required: [
-                    'name',
-                    'sku',
-                    'categoryId',
-                    'locationId',
-                    'qtyOnHand',
-                    'unit',
-                    'unitCost',
-                    'reorderLevel',
-                ],
+                required: ['name', 'sku', 'categoryId', 'locationId', 'qtyOnHand', 'unit', 'unitCost', 'reorderLevel'],
             },
+
             Note: {
                 type: 'object',
                 properties: {
                     _id: { type: 'string' },
                     itemId: { type: 'string' },
                     authorId: { type: 'string' },
-                    body: { type: 'string', maxLength: 1000 },
-                    type: { type: 'string', enum: ['general', 'damage', 'audit'] },
-                    pinned: { type: 'boolean' },
+                    body: { type: 'string', maxLength: 1000, example: 'Box damaged in transit' },
+                    type: { type: 'string', enum: ['general', 'damage', 'audit'], example: 'damage' },
+                    pinned: { type: 'boolean', example: false },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
                 },
                 required: ['itemId', 'authorId', 'body'],
             },
-            // Request bodies
+
+            // request bodies
             CategoryCreate: {
                 type: 'object',
                 properties: {
-                    name: { type: 'string', maxLength: 60 },
-                    description: { type: 'string' },
-                    color: { type: 'string' },
+                    name: { type: 'string', example: 'Cables' },
+                    description: { type: 'string', example: 'Network and power cables' },
+                    color: { type: 'string', example: '#3366FF' },
                 },
                 required: ['name'],
             },
             CategoryUpdate: { allOf: [{ $ref: '#/components/schemas/CategoryCreate' }] },
+
             LocationCreate: {
                 type: 'object',
                 properties: {
-                    name: { type: 'string', maxLength: 60 },
-                    code: { type: 'string', maxLength: 20 },
-                    address: { type: 'string' },
-                    notes: { type: 'string' },
+                    name: { type: 'string', example: 'Warehouse A' },
+                    code: { type: 'string', example: 'WH-A' },
+                    address: { type: 'string', example: '123 Depot Rd' },
+                    notes: { type: 'string', example: 'Near loading dock' },
                 },
                 required: ['name', 'code'],
             },
             LocationUpdate: { allOf: [{ $ref: '#/components/schemas/LocationCreate' }] },
+
             ItemCreate: {
                 type: 'object',
                 properties: {
-                    name: { type: 'string' },
-                    sku: { type: 'string' },
-                    categoryId: { type: 'string' },
-                    locationId: { type: 'string' },
-                    qtyOnHand: { type: 'integer' },
-                    unit: { type: 'string' },
-                    unitCost: { type: 'number' },
-                    reorderLevel: { type: 'integer' },
-                    status: { type: 'string', enum: ['active', 'archived'] },
-                    barcode: { type: 'string' },
-                    tags: { type: 'array', items: { type: 'string' } },
+                    name: { type: 'string', example: 'Cat6 Patch Cable 3ft' },
+                    sku: { type: 'string', example: 'CAT6-3FT-BLK' },
+                    categoryId: { type: 'string', example: '6655b1...' },
+                    locationId: { type: 'string', example: '6655b2...' },
+                    qtyOnHand: { type: 'integer', example: 42 },
+                    unit: { type: 'string', example: 'ea' },
+                    unitCost: { type: 'number', example: 2.49 },
+                    reorderLevel: { type: 'integer', example: 10 },
+                    status: { type: 'string', enum: ['active', 'archived'], example: 'active' },
+                    barcode: { type: 'string', example: '0123456789012' },
+                    tags: { type: 'array', items: { type: 'string' }, example: ['ethernet', 'black'] },
                 },
-                required: [
-                    'name', 'sku', 'categoryId', 'locationId',
-                    'qtyOnHand', 'unit', 'unitCost', 'reorderLevel'
-                ],
+                required: ['name', 'sku', 'categoryId', 'locationId', 'qtyOnHand', 'unit', 'unitCost', 'reorderLevel'],
             },
             ItemUpdate: { allOf: [{ $ref: '#/components/schemas/ItemCreate' }] },
+
             NoteCreate: {
                 type: 'object',
                 properties: {
-                    body: { type: 'string', maxLength: 1000 },
-                    type: { type: 'string', enum: ['general', 'damage', 'audit'] },
-                    pinned: { type: 'boolean' },
+                    body: { type: 'string', example: 'Count adjusted after audit' },
+                    type: { type: 'string', enum: ['general', 'damage', 'audit'], example: 'audit' },
+                    pinned: { type: 'boolean', example: false },
                 },
                 required: ['body'],
             },
             NoteUpdate: { allOf: [{ $ref: '#/components/schemas/NoteCreate' }] },
         },
     },
+
+
     paths: {
         '/health': {
             get: {
@@ -488,31 +508,6 @@ const swaggerSpec = {
                     403: { $ref: '#/components/responses/Forbidden' },
                     404: { $ref: '#/components/responses/NotFound' },
                 },
-            },
-        },
-    },
-    components: {
-        ...(typeof window === 'undefined' ? {} : undefined), // keep node happy
-        responses: {
-            Unauthorized: {
-                description: 'Unauthorized',
-                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
-            },
-            Forbidden: {
-                description: 'Forbidden',
-                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
-            },
-            NotFound: {
-                description: 'Not Found',
-                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
-            },
-            Conflict: {
-                description: 'Conflict',
-                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
-            },
-            BadRequest: {
-                description: 'Bad Request',
-                content: { 'application/json': { schema: { $ref: '#/components/schemas/ErrorResponse' } } },
             },
         },
     },
