@@ -42,29 +42,43 @@ passport.deserializeUser(async (id, done) => {
         done(null, u || null);
     } catch (e) { done(e); }
 });
+// --- replace your current passport.use(new GoogleStrategy(...)) with this ---
+function splitName(displayName) {
+    if (!displayName) return { first: 'Google', last: 'User' };
+    const parts = displayName.trim().split(/\s+/);
+    if (parts.length === 1) return { first: parts[0], last: '' };
+    return { first: parts[0], last: parts.slice(1).join(' ') };
+}
 
 passport.use(new GoogleStrategy(
     {
         clientID: GOOGLE_CLIENT_ID,
         clientSecret: GOOGLE_CLIENT_SECRET,
         callbackURL: GOOGLE_CALLBACK_URL,
-        passReqToCallback: true,
+        passReqToCallback: false,
     },
-    async (_req, _accessToken, _refreshToken, profile, done) => {
+    async (_accessToken, _refreshToken, profile, done) => {
         try {
             const email = profile.emails?.[0]?.value?.toLowerCase();
-            const name = profile.displayName || profile.name?.givenName || email;
+            if (!email) return done(new Error('Google did not return an email.'));
+
+            const { first: splitFirst, last: splitLast } = splitName(profile.displayName || '');
+            const firstName =
+                profile.name?.givenName ?? splitFirst ?? 'Google';
+            const lastName =
+                profile.name?.familyName ?? splitLast ?? 'User';
             const avatarUrl = profile.photos?.[0]?.value;
 
-            let user = await User.findOne({ email });
-            if (!user) {
-                user = await User.create({ email, name, avatarUrl, role: 'user' });
-            } else {
-                // keep name/photo fresh
-                user.name = name;
-                user.avatarUrl = avatarUrl || user.avatarUrl;
-                await user.save();
-            }
+            // Upsert by email; keep avatar fresh
+            const user = await User.findOneAndUpdate(
+                { email },
+                {
+                    $setOnInsert: { email, firstName, lastName, role: 'user', isDeleted: false },
+                    $set: { avatarUrl },
+                },
+                { new: true, upsert: true }
+            );
+
             return done(null, user);
         } catch (e) {
             return done(e);
