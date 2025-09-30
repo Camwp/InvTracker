@@ -1,5 +1,6 @@
 // Import dependencies for routing, models, validation, and authentication
 import express from 'express';
+import mongoose from 'mongoose';           // ⬅️ add this
 import Location from '../models/Location.js';
 import Item from '../models/Item.js';
 import { createLocationZ, updateLocationZ } from '../validators/locations.js';
@@ -18,7 +19,7 @@ r.get('/', async (_req, res, next) => {
         const locs = await Location.find().sort({ name: 1 }).lean();
         // Return locations as JSON
         res.json(locs);
-    // Pass errors to global error handler
+        // Pass errors to global error handler
     } catch (e) {
         next(e);
     }
@@ -43,7 +44,7 @@ r.get('/:id', async (req, res, next) => {
         }
         // Return location as JSON
         res.json(doc);
-    // Pass errors to global error handler
+        // Pass errors to global error handler
     } catch (e) {
         next(e);
     }
@@ -58,7 +59,7 @@ r.post('/', requireAdmin, async (req, res, next) => {
         const doc = await Location.create(data);
         // Return created location with 201 status
         res.status(201).json(doc);
-    // Pass errors to global error handler
+        // Pass errors to global error handler
     } catch (e) {
         next(e);
     }
@@ -69,7 +70,7 @@ r.put('/:id', requireAdmin, async (req, res, next) => {
     // Extract ID from request parameters
     try {
         const { id } = req.params;
-        
+
         // Validate ID format
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Invalid location ID' } });
@@ -85,7 +86,7 @@ r.put('/:id', requireAdmin, async (req, res, next) => {
         }
         // Return updated location
         res.json(doc);
-    // Pass errors to global error handler
+        // Pass errors to global error handler
     } catch (e) {
         next(e);
     }
@@ -101,7 +102,7 @@ r.delete('/:id', requireAdmin, async (req, res, next) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Invalid location ID' } });
         }
-        
+
         // Check for items associated with location
         const count = await Item.countDocuments({ locationId: id });
         // Return 409 if location is in use
@@ -116,7 +117,7 @@ r.delete('/:id', requireAdmin, async (req, res, next) => {
         }
         // Return 204 (no content) on success
         res.status(204).end();
-    // Pass errors to global error handler
+        // Pass errors to global error handler
     } catch (e) {
         next(e);
     }
