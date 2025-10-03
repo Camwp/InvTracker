@@ -7,13 +7,16 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import cors from 'cors';
 import morgan from 'morgan';
 import 'dotenv/config';
+
 import User from './src/models/User.js';
-import authRoutes, { requireAuth, requireAdmin } from './src/middleware/auth.js';
+import authRoutes from './src/routes/auth.js';
 import categoryRoutes from './src/routes/categories.js';
 import locationRoutes from './src/routes/locations.js';
 import itemRoutes from './src/routes/items.js';
 import noteRoutes from './src/routes/notes.js';
+import { requireAuth, requireAdmin } from './src/middleware/auth.js';
 import { errorHandler } from './src/middleware/errors.js';
+
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './src/docs/swagger.js';
 
@@ -34,7 +37,7 @@ if (!MONGODB_URI || !SESSION_SECRET || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRE
 
 await mongoose.connect(MONGODB_URI);
 
-// Passport session
+// --- Passport session serialization ---
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
     try {
@@ -85,7 +88,7 @@ passport.use(new GoogleStrategy(
 
 const app = express();
 
-// CORS
+// --- CORS (allow creds; include Authorization for Swagger "Try it out") ---
 app.use(cors({
     origin: FRONTEND_ORIGIN || true,
     credentials: true,
@@ -96,7 +99,7 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json({ limit: '1mb' }));
 
-// Sessions
+// --- Sessions ---
 const isLocal = !FRONTEND_ORIGIN || FRONTEND_ORIGIN.startsWith('http://localhost');
 app.set('trust proxy', 1);
 app.use(session({
@@ -118,13 +121,13 @@ app.use(passport.session());
 // ---------- PUBLIC ROUTES ----------
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
-// Swagger (PUBLIC)
+// Swagger UI (PUBLIC)
 app.use(
     ['/api-docs', '/docs'],
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec, {
         swaggerOptions: {
-            // Let "Try it out" send cookies if viewing on same origin
+            // Let Swagger send cookies for same-origin requests
             requestInterceptor: (req) => { req.credentials = 'include'; return req; },
         },
     })
@@ -142,12 +145,13 @@ app.use('/locations', requireAuth, locationRoutes);
 app.use('/items', requireAuth, itemRoutes);
 app.use('/', requireAuth, noteRoutes); // /items/:itemId/notes and /notes/:id
 
+// Example admin-only routes (if any)
 // app.use('/admin', requireAdmin, adminRouter);
 
-// Errors last
+// ---------- Errors last ----------
 app.use(errorHandler);
 
-// Start
+// ---------- Start ----------
 app.listen(PORT, () => {
     console.log(`API listening on port ${PORT} (frontend: ${FRONTEND_ORIGIN || 'n/a'})`);
 });
