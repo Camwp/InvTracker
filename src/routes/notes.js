@@ -5,13 +5,13 @@ import { createNoteZ, updateNoteZ } from '../validators/notes.js';
 import { requireAuth } from '../middleware/auth.js';
 
 // Create an Express router for note-related endpoints
-const r = express.Router();
+const router = express.Router();
 
 // Apply authentication middleware to all routes
-r.use(requireAuth);
+router.use(requireAuth);
 
 // Get all notes, with optional filtering by type and pinned status
-r.get('/notes', async (req, res, next) => {
+router.get('/notes', async (req, res, next) => {
     try {
         const { type, pinned } = req.query;
         const filter = {};
@@ -31,7 +31,7 @@ r.get('/notes', async (req, res, next) => {
 });
 
 // Get a single note by its ID
-r.get('/notes/:id', async (req, res, next) => {
+router.get('/notes/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -56,7 +56,7 @@ r.get('/notes/:id', async (req, res, next) => {
 });
 
 // Create a new note
-r.post('/notes', async (req, res, next) => {
+router.post('/notes', async (req, res, next) => {
     try {
         // Validate request body with Zod schema
         const data = createNoteZ.parse(req.body);
@@ -83,7 +83,7 @@ r.post('/notes', async (req, res, next) => {
 });
 
 // Update an existing note
-r.put('/notes/:id', async (req, res, next) => {
+router.put('/notes/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -124,7 +124,7 @@ r.put('/notes/:id', async (req, res, next) => {
 });
 
 // Delete a note
-r.delete('/notes/:id', async (req, res, next) => {
+router.delete('/notes/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -162,4 +162,4 @@ r.delete('/notes/:id', async (req, res, next) => {
 });
 
 // Export the router for use in the main app
-export default r;
+export default router;

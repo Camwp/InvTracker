@@ -6,13 +6,13 @@ import { createLocationZ, updateLocationZ } from '../validators/locations.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
 // Initialize Express router for location-related endpoints
-const r = express.Router();
+const router = express.Router();
 
 // Apply authentication middleware to all routes
-r.use(requireAuth);
+router.use(requireAuth);
 
 // Fetch all locations, sorted alphabetically by name
-r.get('/', async (_req, res, next) => {
+router.get('/', async (_req, res, next) => {
     // Query all locations, return plain objects for performance
     try {
         const locs = await Location.find().sort({ name: 1 }).lean();
@@ -25,7 +25,7 @@ r.get('/', async (_req, res, next) => {
 });
 
 // Fetch a single location by its ID
-r.get('/:id', async (req, res, next) => {
+router.get('/:id', async (req, res, next) => {
     // Extract ID from request parameters
     try {
         const { id } = req.params;
@@ -50,7 +50,7 @@ r.get('/:id', async (req, res, next) => {
 });
 
 // Create a new location, restricted to admin users
-r.post('/', requireAdmin, async (req, res, next) => {
+router.post('/', requireAdmin, async (req, res, next) => {
     // Validate request body with Zod schema
     try {
         const data = createLocationZ.parse(req.body);
@@ -65,7 +65,7 @@ r.post('/', requireAdmin, async (req, res, next) => {
 });
 
 // Update an existing location, restricted to admin users
-r.put('/:id', requireAdmin, async (req, res, next) => {
+router.put('/:id', requireAdmin, async (req, res, next) => {
     // Extract ID from request parameters
     try {
         const { id } = req.params;
@@ -92,7 +92,7 @@ r.put('/:id', requireAdmin, async (req, res, next) => {
 });
 
 // Delete a location, restricted to admin users
-r.delete('/:id', requireAdmin, async (req, res, next) => {
+router.delete('/:id', requireAdmin, async (req, res, next) => {
     // Extract ID from request parameters
     try {
         const { id } = req.params;
@@ -123,4 +123,4 @@ r.delete('/:id', requireAdmin, async (req, res, next) => {
 });
 
 // Export the router for integration into the main app
-export default r;
+export default router;
