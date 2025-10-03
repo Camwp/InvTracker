@@ -8,7 +8,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import 'dotenv/config';
 import User from './src/models/User.js';
-import authRoutes from './src/routes/auth.js';
+import authRoutes, { requireAuth, requireAdmin } from './src/routes/auth.js';
 import categoryRoutes from './src/routes/categories.js';
 import locationRoutes from './src/routes/locations.js';
 import itemRoutes from './src/routes/items.js';
@@ -34,7 +34,7 @@ if (!MONGODB_URI || !SESSION_SECRET || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRE
 
 await mongoose.connect(MONGODB_URI);
 
-// Passport: serialize minimal user info
+// Passport session
 passport.serializeUser((user, done) => done(null, user.id));
 passport.deserializeUser(async (id, done) => {
     try {
@@ -42,7 +42,7 @@ passport.deserializeUser(async (id, done) => {
         done(null, u || null);
     } catch (e) { done(e); }
 });
-// --- replace your current passport.use(new GoogleStrategy(...)) with this ---
+
 function splitName(displayName) {
     if (!displayName) return { first: 'Google', last: 'User' };
     const parts = displayName.trim().split(/\s+/);
@@ -63,13 +63,10 @@ passport.use(new GoogleStrategy(
             if (!email) return done(new Error('Google did not return an email.'));
 
             const { first: splitFirst, last: splitLast } = splitName(profile.displayName || '');
-            const firstName =
-                profile.name?.givenName ?? splitFirst ?? 'Google';
-            const lastName =
-                profile.name?.familyName ?? splitLast ?? 'User';
+            const firstName = profile.name?.givenName ?? splitFirst ?? 'Google';
+            const lastName = profile.name?.familyName ?? splitLast ?? 'User';
             const avatarUrl = profile.photos?.[0]?.value;
 
-            // Upsert by email; keep avatar fresh
             const user = await User.findOneAndUpdate(
                 { email },
                 {
@@ -88,26 +85,25 @@ passport.use(new GoogleStrategy(
 
 const app = express();
 
-// CORS for cross-origin frontends
+// CORS
 app.use(cors({
-    origin: FRONTEND_ORIGIN, // e.g., https://your-frontend.example
+    origin: FRONTEND_ORIGIN || true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(morgan('dev'));
 app.use(express.json({ limit: '1mb' }));
 
-// Sessions (Mongo-backed)
-const isLocal = !process.env.FRONTEND_ORIGIN || process.env.FRONTEND_ORIGIN.startsWith('http://localhost');
-
+// Sessions
+const isLocal = !FRONTEND_ORIGIN || FRONTEND_ORIGIN.startsWith('http://localhost');
 app.set('trust proxy', 1);
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URI }),
+    store: MongoStore.create({ mongoUrl: MONGODB_URI }),
     cookie: {
         httpOnly: true,
         sameSite: isLocal ? 'lax' : 'none',
@@ -119,23 +115,39 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/categories', categoryRoutes);
-app.use('/locations', locationRoutes);
-app.use('/items', itemRoutes);
-app.use('/', noteRoutes); // provides /items/:itemId/notes and /notes/:id
-app.get('/', (req, res) => {
-    res.redirect('/api-docs');
-});
-// Health & root
+// ---------- PUBLIC ROUTES ----------
 app.get('/health', (_req, res) => res.json({ ok: true }));
-app.use(['/api-docs', '/docs'], swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Error handler
+// Swagger (PUBLIC)
+app.use(
+    ['/api-docs', '/docs'],
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+        swaggerOptions: {
+            // Let "Try it out" send cookies if viewing on same origin
+            requestInterceptor: (req) => { req.credentials = 'include'; return req; },
+        },
+    })
+);
+
+// Auth (PUBLIC)
+app.use('/auth', authRoutes);
+
+// Root -> docs (PUBLIC)
+app.get('/', (_req, res) => res.redirect('/api-docs'));
+
+// ---------- PROTECTED API ROUTES ----------
+app.use('/categories', requireAuth, categoryRoutes);
+app.use('/locations', requireAuth, locationRoutes);
+app.use('/items', requireAuth, itemRoutes);
+app.use('/', requireAuth, noteRoutes); // /items/:itemId/notes and /notes/:id
+
+// app.use('/admin', requireAdmin, adminRouter);
+
+// Errors last
 app.use(errorHandler);
 
 // Start
 app.listen(PORT, () => {
-    console.log(`API listening on ${process.env.FRONTEND_ORIGIN}`);
+    console.log(`API listening on port ${PORT} (frontend: ${FRONTEND_ORIGIN || 'n/a'})`);
 });
