@@ -8,7 +8,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import 'dotenv/config';
 import User from './src/models/User.js';
-import authRoutes, { requireAuth, requireAdmin } from './src/routes/auth.js';
+import authRoutes, { requireAuth, requireAdmin } from './src/middleware/auth.js';
 import categoryRoutes from './src/routes/categories.js';
 import locationRoutes from './src/routes/locations.js';
 import itemRoutes from './src/routes/items.js';
