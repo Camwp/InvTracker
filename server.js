@@ -127,7 +127,6 @@ app.use(
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec, {
         swaggerOptions: {
-            // Let Swagger send cookies for same-origin requests
             requestInterceptor: (req) => { req.credentials = 'include'; return req; },
         },
     })
@@ -145,8 +144,6 @@ app.use('/locations', requireAuth, locationRoutes);
 app.use('/items', requireAuth, itemRoutes);
 app.use('/', requireAuth, noteRoutes); // /items/:itemId/notes and /notes/:id
 
-// Example admin-only routes (if any)
-// app.use('/admin', requireAdmin, adminRouter);
 
 // ---------- Errors last ----------
 app.use(errorHandler);
