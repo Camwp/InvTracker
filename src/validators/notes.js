@@ -6,5 +6,5 @@ export const createNoteZ = z.object({
     pinned: z.boolean().optional(),
 });
 
-// For PUT you probably want partial:
+
 export const updateNoteZ = createNoteZ.partial();
