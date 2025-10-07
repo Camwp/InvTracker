@@ -387,12 +387,13 @@ const swaggerSpec = {
             },
         },
 
-        // ---------- ITEMS ----------
+        // ---------- ITEMS ---------
         '/items': {
             get: {
                 tags: ['Items'],
                 security: [{ cookieAuth: [] }],
                 summary: 'List items (filters supported)',
+                // Params
                 parameters: [
                     { name: 'q', in: 'query', schema: { type: 'string' }, description: 'Case-insensitive name match' },
                     { name: 'categoryId', in: 'query', schema: { type: 'string' } },
@@ -441,6 +442,7 @@ const swaggerSpec = {
                     404: { $ref: '#/components/responses/NotFound' },
                 },
             },
+            // Delete route
             delete: {
                 tags: ['Items'],
                 security: [{ cookieAuth: [] }],
@@ -453,7 +455,7 @@ const swaggerSpec = {
             },
         },
 
-        // ---------- NOTES ----------
+        // ---------- NOTES ---------
         '/items/{itemId}/notes': {
             parameters: [{ name: 'itemId', in: 'path', required: true, schema: { type: 'string' } }],
             get: {
@@ -484,6 +486,7 @@ const swaggerSpec = {
             },
         },
         '/notes/{id}': {
+            //Params
             parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
             put: {
                 tags: ['Notes'],
@@ -497,7 +500,7 @@ const swaggerSpec = {
                     403: { $ref: '#/components/responses/Forbidden' },
                     404: { $ref: '#/components/responses/NotFound' },
                 },
-            },
+            }, //Delete 
             delete: {
                 tags: ['Notes'],
                 security: [{ cookieAuth: [] }],
