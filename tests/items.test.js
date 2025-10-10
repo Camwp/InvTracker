@@ -5,6 +5,33 @@ import Category from '../src/models/Category.js';
 import Location from '../src/models/Location.js';
 import Item from '../src/models/Item.js';
 
+describe('Items GET', () => {
+  let app, cat, loc, a, b;
+
+  beforeAll(async () => { await connect(); app = buildTestApp(); });
+  afterAll(async () => { await closeDatabase(); });
+  beforeEach(async () => {
+    await clearDatabase();
+    cat = await Category.create({ name: 'Hardware' });
+    loc = await Location.create({ name: 'Aisle 1', code: 'A1' });
+    a = await Item.create({ name:'Bolt', sku:'B1', categoryId:cat._id, locationId:loc._id, qtyOnHand:5, unit:'ea', unitCost:0.1, reorderLevel:1, status:'active' });
+    b = await Item.create({ name:'Nut',  sku:'N1', categoryId:cat._id, locationId:loc._id, qtyOnHand:2, unit:'ea', unitCost:0.2, reorderLevel:1, status:'active' });
+  });
+
+  test('GET /items returns array', async () => {
+    const res = await request(app).get('/items');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBe(2);
+  });
+
+  test('GET /items/:id returns single', async () => {
+    const res = await request(app).get(`/items/${a._id}`);
+    expect(res.status).toBe(200);
+    expect(res.body._id).toBe(String(a._id));
+  });
+});
+
 describe('Items API', () => {
     let app;
     let cat;
@@ -72,4 +99,4 @@ describe('Items API', () => {
         const check = await Item.findById(item._id);
         expect(check).toBeNull();
     });
-})
+});
