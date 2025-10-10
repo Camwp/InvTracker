@@ -3,11 +3,11 @@ import passport from 'passport';
 
 const r = express.Router();
 
-r.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+r.get('/google', passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' }));
 
 r.get('/google/callback', passport.authenticate('google', {
     failureRedirect: '/auth/failure',
-    successReturnToOrRedirect: '/', // or your FRONTEND_ORIGIN
+    successReturnToOrRedirect: '/',
 }));
 
 r.get('/me', (req, res) => {
