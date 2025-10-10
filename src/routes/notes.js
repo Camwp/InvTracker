@@ -31,6 +31,7 @@ router.get('/notes', async (req, res, next) => {
         next(e);
     }
 });
+
 // GET notes for a specific item
 router.get('/notes/:itemId', async (req, res, next) => {
     try {
@@ -82,28 +83,43 @@ router.get('/notes/single/:id', async (req, res, next) => {
         next(e);
     }
 });
+
+// Create a new note for a specific item
 router.post('/notes/:itemId', async (req, res, next) => {
     try {
+
+        // Extract itemId from request parameters
         const { itemId } = req.params;
 
+        // Validate itemId format
         if (!mongoose.Types.ObjectId.isValid(itemId)) {
             return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Invalid item ID' } });
         }
 
+        // Validate request body with Zod schema
         const data = createNoteZ.parse(req.body);          // { body, type?, pinned? }
         const item = await Item.findById(itemId);
+
+        // Return 404 if the item doesn't exist
         if (!item) {
             return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Item not found' } });
         }
 
+        // Create note in database
         const note = await Note.create({
             itemId,                     // from path
             authorId: req.user._id,     // from session
             ...data,
         });
 
+        // Return created note with 201 status
         res.status(201).json(note);
-    } catch (e) { next(e); }
+
+
+    } catch (e) {
+        // Pass errors to global error handler
+        next(e);
+    }
 });
 
 
