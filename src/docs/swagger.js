@@ -456,7 +456,7 @@ const swaggerSpec = {
         },
 
         // ---------- NOTES ---------
-        '/items/{itemId}/notes': {
+        '/notes/{itemId}': {
             parameters: [{ name: 'itemId', in: 'path', required: true, schema: { type: 'string' } }],
             get: {
                 tags: ['Notes'],
