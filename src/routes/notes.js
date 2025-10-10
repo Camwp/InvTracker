@@ -35,26 +35,38 @@ router.get('/notes', async (req, res, next) => {
 // GET notes for a specific item
 router.get('/notes/:itemId', async (req, res, next) => {
     try {
+
+        // Extract itemId from request parameters
         const { itemId } = req.params;
         const { type, pinned } = req.query;
 
+        // Validate itemId format
         if (!mongoose.Types.ObjectId.isValid(itemId)) {
             return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Invalid item ID' } });
         }
 
         // (Optional) 404 if the item doesn't exist. Remove this block if you prefer returning [].
         const itemExists = await Item.exists({ _id: itemId });
+
+        // Return 404 if the item doesn't exist
         if (!itemExists) {
             return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Item not found' } });
         }
 
+        // Build query filter
         const filter = { itemId };
+
+        // Apply query filters if provided
         if (type) filter.type = type;
+        // Filter by pinned status if provided
         if (pinned !== undefined) filter.pinned = pinned === 'true';
 
+        // Fetch notes for the item, sorted by creation date (newest first)
         const notes = await Note.find(filter).sort({ createdAt: -1 }).lean();
+        // Return notes as JSON
         res.json(notes);
     } catch (e) {
+        // Pass errors to global error handler
         next(e);
     }
 });
