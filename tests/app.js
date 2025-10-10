@@ -20,5 +20,6 @@ export function buildTestApp() {
     app.use('/locations', locationsRouter);
     app.use('/notes', notesRouter);
     app.use('/users', usersRouter);
+    app.get('/health', (_req, res) => res.json({ ok: true }));
     return app;
 }
