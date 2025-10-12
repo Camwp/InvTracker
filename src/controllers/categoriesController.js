@@ -1,5 +1,5 @@
 import Category from '../models/Category.js';
-import { createCategoryZ, updateCategoryZ } from '../validators/categories.js';
+import { createCategoryValidator, updateCategoryValidator } from '../validators/categories.js';
 
 // GET all
 export const getAllCategories = async (req, res) => {
@@ -27,7 +27,7 @@ export const getSingleCategory = async (req, res) => {
 // POST
 export const createCategory = async (req, res) => {
   try {
-    const validatedData = createCategoryZ.parse(req.body);
+    const validatedData = createCategoryValidator.parse(req.body);
     const category = new Category(validatedData);
     await category.save();
     res.status(201).json(category);
@@ -39,7 +39,7 @@ export const createCategory = async (req, res) => {
 // PUT
 export const updateCategory = async (req, res) => {
   try {
-    const validatedData = updateCategoryZ.parse(req.body);
+    const validatedData = updateCategoryValidator.parse(req.body);
     const category = await Category.findByIdAndUpdate(
       req.params.id,
       validatedData,

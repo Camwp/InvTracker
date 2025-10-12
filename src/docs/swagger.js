@@ -77,7 +77,7 @@ const swaggerSpec = {
                 type: 'object',
                 properties: {
                     _id: { type: 'string', example: '6655b1...' },
-                    name: { type: 'string', maxLength: 60, example: 'Cables' },
+                    name: { type: 'string', maxLength: 80, example: 'Cables' },
                     description: { type: 'string', example: 'Network and power cables' },
                     color: { type: 'string', example: '#3366FF' },
                     createdAt: { type: 'string', format: 'date-time' },

@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-export const createCategoryZ = z.object({
-    name: z.string().min(1).max(60),
-    description: z.string().max(500).optional(),
+export const createCategoryValidator = z.object({
+    name: z.string().min(1).max(80),
+    description: z.string().max(600).optional(),
     color: z.string().regex(/^#([0-9A-Fa-f]{6})$/).optional(),
 });
 
-export const updateCategoryZ = createCategoryZ.partial();
+export const updateCategoryValidator = createCategoryValidator.partial();
