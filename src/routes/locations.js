@@ -6,6 +6,13 @@ import Item from '../models/Item.js';
 import { createLocationZ, updateLocationZ } from '../validators/locations.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 
+const invalidId = 'INVALID_ID';
+const invalidLocationId = 'Invalid location ID';
+const notFound = 'NOT_FOUND';
+const locationNotFound = 'Location not found';
+const deleteConflict = 'DELETE_CONFLICT';
+const locationHasItems = 'Location has items';
+
 // Initialize Express router for location-related endpoints
 const router = express.Router();
 
@@ -33,14 +40,14 @@ router.get('/:id', async (req, res, next) => {
 
         // Validate ID format
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Invalid location ID' } });
+            return res.status(400).json({ error: { code: invalidId, message: invalidLocationId } });
         }
 
         // Query location by ID, return plain object for performance
         const doc = await Location.findById(id).lean();
         // Return 404 if location doesn't exist
         if (!doc) {
-            return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Location not found' } });
+            return res.status(404).json({ error: { code: notFound, message: locationNotFound } });
         }
         // Return location as JSON
         res.json(doc);
@@ -73,7 +80,7 @@ router.put('/:id', requireAdmin, async (req, res, next) => {
 
         // Validate ID format
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Invalid location ID' } });
+            return res.status(400).json({ error: { code: invalidId, message: invalidLocationId } });
         }
 
         // Validate request body with Zod schema
@@ -82,7 +89,7 @@ router.put('/:id', requireAdmin, async (req, res, next) => {
         const doc = await Location.findByIdAndUpdate(id, data, { new: true });
         // Return 404 if location doesn't exist
         if (!doc) {
-            return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Location not found' } });
+            return res.status(404).json({ error: { code: notFound, message: locationNotFound } });
         }
         // Return updated location
         res.json(doc);
@@ -100,20 +107,20 @@ router.delete('/:id', requireAdmin, async (req, res, next) => {
 
         // Validate ID format
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Invalid location ID' } });
+            return res.status(400).json({ error: { code: invalidId, message: invalidLocationId } });
         }
 
         // Check for items associated with location
         const count = await Item.countDocuments({ locationId: id });
         // Return 409 if location is in use
         if (count > 0) {
-            return res.status(409).json({ error: { code: 'DELETE_CONFLICT', message: 'Location has items' } });
+            return res.status(409).json({ error: { code: deleteConflict, message: locationHasItems } });
         }
         // Delete location by ID
         const out = await Location.findByIdAndDelete(id);
         // Return 404 if location doesn't exist
         if (!out) {
-            return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Location not found' } });
+            return res.status(404).json({ error: { code: notFound, message: locationNotFound } });
         }
         // Return 204 (no content) on success
         res.status(204).end();
