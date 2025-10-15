@@ -58,7 +58,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Create a new location, restricted to admin users
-router.post('/', async (req, res, next) => {
+router.post('/', requireAdmin, async (req, res, next) => {
     // Validate request body with Zod schema
     try {
         const data = createLocationZ.parse(req.body);
@@ -73,7 +73,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // Update an existing location, restricted to admin users
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', requireAdmin, async (req, res, next) => {
     // Extract ID from request parameters
     try {
         const { id } = req.params;
@@ -100,7 +100,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // Delete a location, restricted to admin users
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireAdmin, async (req, res, next) => {
     // Extract ID from request parameters
     try {
         const { id } = req.params;
