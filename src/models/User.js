@@ -7,7 +7,7 @@ const UserSchema = new Schema(
     lastName: { type: String, required: true },
     email: { type: String, required: true, index: true, unique: true },
     avatarUrl: { type: String },
-    role: { type: String, enum: ['user', 'admin'], default: 'admin' },
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
     passwordHash: { type: String }, // Optional for OAuth
     phoneNumber: { type: String },
     address: { type: String },
