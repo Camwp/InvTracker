@@ -17,10 +17,10 @@ router.get('/', getItems)
 
 router.get('/:id', getItemById)
 
-router.post('/', requireAuth, createItem)
+router.post('/', requireAuth, requireAdmin, createItem)
 
-router.put('/:id', requireAuth, updateItem)
+router.put('/:id', requireAuth, requireAdmin, updateItem)
 
-router.delete('/:id', requireAuth, deleteItem)
+router.delete('/:id', requireAuth, requireAdmin, deleteItem)
 
 export default router;
