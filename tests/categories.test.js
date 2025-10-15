@@ -20,23 +20,26 @@ describe('Categories API', () => {
         cat = await Category.create({ name: 'Tools', color:'#00ff00' });
     });
 
-    test ('GET /categories returns all categories', async () => {
+    test('GET /categories returns all categories', async () => {
         const res = await request(app).get('/categories');
         expect(res.status).toBe(200);
-        expect(res.body).not.toEqual([]);
+        expect(Array.isArray(res.body)).toBe(true);
+        expect(res.body.length).toBeGreaterThan(0);
     });
 
     test('GET /categories/:id returns one', async () => {
         const res = await request(app).get(`/categories/${cat._id}`);
         expect(res.status).toBe(200);
         expect(res.body.name).toBe('Tools');
+        expect(res.body.color).toBe('#00ff00');
     });
 
     test('POST /categories creates a category', async () => {
         const res = await request(app).post('/categories').send({ name: 'Hardware', color: '#ff0000' });
-        expect(res.status).toBeLessThan(500); // allow 201 or 400 if validators differ
+        expect(res.status).toBeLessThan(500);
         if (res.status === 201) {
             expect(res.body.name).toBe('Hardware');
+            expect(res.body.color).toBe('#ff0000');
         }
     });
 
@@ -47,9 +50,8 @@ describe('Categories API', () => {
     });
 
     test('DELETE /categories/:id deletes a category', async () => {
-        const cat = await Category.create({ name: 'Tools' });
         const res = await request(app).delete(`/categories/${cat._id}`);
         expect(res.status).toBe(200);
         expect(res.body.message).toMatch(/deleted/i);
     });
-})
+});

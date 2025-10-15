@@ -28,8 +28,7 @@ export const getSingleCategory = async (req, res) => {
 export const createCategory = async (req, res) => {
   try {
     const validatedData = createCategoryValidator.parse(req.body);
-    const category = new Category(validatedData);
-    await category.save();
+    const category = await Category.create(validatedData);
     res.status(201).json(category);
   } catch (err) {
     res.status(400).json({ error: err.message });
