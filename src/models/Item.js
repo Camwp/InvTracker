@@ -8,7 +8,7 @@ const ItemSchema = new Schema(
         categoryId: { type: Types.ObjectId, ref: 'Category', required: true, index: true },
         locationId: { type: Types.ObjectId, ref: 'Location', required: true, index: true },
         qtyOnHand: { type: Number, required: true, min: 0, default: 0 },
-        unit: { type: String, required: true, maxlength: 10, default: 'ea' }, // 'ea','box','kg',...
+        unit: { type: String, required: true, maxlength: 10, default: 'box' }, // 'ea','box','kg',...
         unitCost: { type: Number, required: true, min: 0, default: 0 },
         reorderLevel: { type: Number, required: true, min: 0, default: 0 },
         status: { type: String, enum: ['active', 'archived'], default: 'active' },
