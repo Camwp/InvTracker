@@ -6,6 +6,9 @@ import mongoose from 'mongoose';
 import { createNoteZ, updateNoteZ } from '../validators/notes.js';
 import { requireAuth } from '../middleware/auth.js';
 
+// Base path for notes endpoints
+const notes = '/notes';
+
 // Create an Express router for note-related endpoints
 const router = express.Router();
 
@@ -13,7 +16,7 @@ const router = express.Router();
 router.use(requireAuth);
 
 // Get all notes, with optional filtering by type and pinned status
-router.get('/notes', async (req, res, next) => {
+router.get(notes, async (req, res, next) => {
     try {
         const { type, pinned } = req.query;
         const filter = {};
@@ -33,7 +36,7 @@ router.get('/notes', async (req, res, next) => {
 });
 
 // GET notes for a specific item
-router.get('/notes/:itemId', async (req, res, next) => {
+router.get(`${notes}/:itemId`, async (req, res, next) => {
     try {
 
         // Extract itemId from request parameters
@@ -72,7 +75,7 @@ router.get('/notes/:itemId', async (req, res, next) => {
 });
 
 // Get a single note by its ID
-router.get('/notes/single/:id', async (req, res, next) => {
+router.get(`${notes}/single/:id`, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -97,7 +100,7 @@ router.get('/notes/single/:id', async (req, res, next) => {
 });
 
 // Create a new note for a specific item
-router.post('/notes/:itemId', async (req, res, next) => {
+router.post(`${notes}/:itemId`, async (req, res, next) => {
     try {
 
         // Extract itemId from request parameters
@@ -136,7 +139,7 @@ router.post('/notes/:itemId', async (req, res, next) => {
 
 
 // Update an existing note
-router.put('/notes/:id', async (req, res, next) => {
+router.put(`${notes}/:id`, async (req, res, next) => {
     try {
         const { id } = req.params;
 
@@ -177,7 +180,7 @@ router.put('/notes/:id', async (req, res, next) => {
 });
 
 // Delete a note
-router.delete('/notes/:id', async (req, res, next) => {
+router.delete(`${notes}/:id`, async (req, res, next) => {
     try {
         const { id } = req.params;
 
